@@ -1,4 +1,3 @@
-
 let BOARD_ROWS = 8, BOARD_COLS = 8, board = [], currentMove = 0, currentPos = null, moveHistory = [];
 const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
 const chessboardDiv = document.getElementById('chessboard'), boardRowsInput = document.getElementById('board-rows'), boardColsInput = document.getElementById('board-cols');
@@ -12,11 +11,12 @@ function initializeBoard() {
     BOARD_ROWS = r; BOARD_COLS = c; currentMove = 0; currentPos = null; moveHistory = [];
     board = Array(BOARD_ROWS).fill(0).map(() => Array(BOARD_COLS).fill(0));
     chessboardDiv.style.gridTemplateColumns = `repeat(${BOARD_COLS}, 1fr)`;
-    chessboardDiv.style.width = 'auto'; 
     createBoard(); updateProgress();
-    setTimeout(resizeCanvas, 100);
+    // スマホのレイアウト確定を待ってからCanvasをリサイズ
+    setTimeout(resizeCanvas, 200);
     messageElement.textContent = "SYSTEM INITIALIZED. SELECT START NODE.";
 }
+
 function createBoard() {
     chessboardDiv.innerHTML = '';
     for (let r = 0; r < BOARD_ROWS; r++) {
@@ -29,30 +29,49 @@ function createBoard() {
         }
     }
 }
+
 function resizeCanvas() {
     const rect = chessboardDiv.getBoundingClientRect();
-    canvas.width = rect.width; canvas.height = rect.height;
+    const dpr = window.devicePixelRatio || 1;
+    // 解像度に合わせてキャンバスのピクセルサイズを設定
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    // 表示サイズはCSSのままで
+    ctx.scale(dpr, dpr);
     drawPath();
 }
+
 function drawPath() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (!pathToggle.checked || moveHistory.length < 2) return;
-    ctx.beginPath(); ctx.strokeStyle = '#00f2ff'; ctx.lineWidth = 1.5;
-    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.shadowBlur = 5; ctx.shadowColor = '#00f2ff';
-    const sw = canvas.width / BOARD_COLS, sh = canvas.height / BOARD_ROWS;
+    
+    const rect = chessboardDiv.getBoundingClientRect();
+    const sw = rect.width / BOARD_COLS;
+    const sh = rect.height / BOARD_ROWS;
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#00f2ff';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.shadowBlur = 5;
+    ctx.shadowColor = '#00f2ff';
+
     moveHistory.forEach((p, i) => {
-        const x = (p.c + 0.5) * sw, y = (p.r + 0.5) * sh;
+        const x = (p.c + 0.5) * sw;
+        const y = (p.r + 0.5) * sh;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.stroke();
 }
+
 function updateProgress() {
     const total = BOARD_ROWS * BOARD_COLS;
     const percent = total > 0 ? Math.floor((currentMove / total) * 100) : 0;
     progressBar.style.width = `${percent}%`;
     progressText.textContent = `PROGRESS: ${percent}% (${currentMove}/${total})`;
 }
+
 function moveKnight(r, c) {
     moveHistory.push({r, c});
     if (currentPos) {
@@ -75,6 +94,7 @@ function moveKnight(r, c) {
         messageElement.textContent = "TARGET ACQUIRED. SCANNING...";
     }
 }
+
 function undoMove() {
     if (currentMove <= 1) { initializeBoard(); return; }
     flashOverlay.className = 'screen-flash';
@@ -90,25 +110,32 @@ function undoMove() {
     updateProgress(); drawPath(); highlightPossibleMoves(last.r, last.c);
     messageElement.textContent = `RECOVERED TO STEP ${currentMove}.`;
 }
+
 function highlightPossibleMoves(r, c) {
     document.querySelectorAll('.possible-move').forEach(e => e.classList.remove('possible-move'));
     let m = [];
     for (const [dr, dc] of knightMoves) {
         const nr = r + dr, nc = c + dc;
         if (nr >= 0 && nr < BOARD_ROWS && nc >= 0 && nc < BOARD_COLS && board[nr][nc] === 0) {
-            m.push([nr, nc]); document.querySelector(`[data-row='${nr}'][data-col='${nc}']`).classList.add('possible-move');
+            m.push([nr, nc]); 
+            const target = document.querySelector(`[data-row='${nr}'][data-col='${nc}']`);
+            if(target) target.classList.add('possible-move');
         }
     }
     return m;
 }
+
 function handleSquareClick(r, c) {
     const el = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
     if (currentMove === 0 || el.classList.contains('possible-move')) moveKnight(r, c);
 }
+
 function toggleHelp() {
     const m = document.getElementById('help-modal');
     m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
 }
 
+// 画面回転やリサイズ時にCanvasを再調整
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
 document.addEventListener('DOMContentLoaded', initializeBoard);
