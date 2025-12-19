@@ -14,10 +14,10 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <h2>KNIGHT TOUR PROTOCOL</h2>
             <ul class="rule-list">
-                <li><span>MISSION:</span> 盤面上のすべてのノード（マス）を1度ずつスキャンせよ。</li>
-                <li><span>MOVEMENT:</span> ナイトは「L字型」にのみジャンプ可能。</li>
-                <li><span>RESTRICTION:</span> すでにスキャン済みのノードには戻れない。</li>
-                <li><span>RECOVERY:</span> 「UNDO」で1手前の状態へ復旧できる。</li>
+                <li><span>MISSION:</span> 全ノードを1度ずつスキャンせよ。</li>
+                <li><span>MOVEMENT:</span> ナイトは「L字型」にジャンプ可能。</li>
+                <li><span>LINE PATH:</span> スイッチで移動軌跡の表示を切り替え可能。</li>
+                <li><span>RECOVERY:</span> 「UNDO」で1手前へ復旧できる。</li>
             </ul>
             <div style="text-align:center; margin-top:20px;">
                 <button class="btn-main" onclick="toggleHelp()">CLOSE</button>
@@ -37,12 +37,22 @@
                 <span>×</span>
                 <input type="number" id="board-cols" value="8" min="3" max="12">
             </div>
+            <div class="toggle-group">
+                <label class="switch">
+                    <input type="checkbox" id="path-toggle" onchange="drawPath()">
+                    <span class="slider"></span>
+                </label>
+                <span class="toggle-label">LINE PATH</span>
+            </div>
             <div class="button-group">
                 <button onclick="initializeBoard()" class="btn-main">START / RESET</button>
                 <button onclick="undoMove()" class="btn-sub">UNDO</button>
             </div>
         </div>
-        <div id="chessboard-wrapper"><div id="chessboard"></div></div>
+        <div id="chessboard-wrapper">
+            <canvas id="path-canvas"></canvas>
+            <div id="chessboard"></div>
+        </div>
         <p id="message">SYSTEM READY. SELECT START NODE.</p>
     </div>
     <script src="script.js"></script>

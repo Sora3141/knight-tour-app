@@ -1,7 +1,9 @@
+
 let BOARD_ROWS = 8, BOARD_COLS = 8, board = [], currentMove = 0, currentPos = null, moveHistory = [];
 const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
 const chessboardDiv = document.getElementById('chessboard'), boardRowsInput = document.getElementById('board-rows'), boardColsInput = document.getElementById('board-cols');
 const messageElement = document.getElementById('message'), progressBar = document.getElementById('progress-bar'), progressText = document.getElementById('progress-text'), flashOverlay = document.getElementById('flash-overlay');
+const canvas = document.getElementById('path-canvas'), ctx = canvas.getContext('2d'), pathToggle = document.getElementById('path-toggle');
 
 function initializeBoard() {
     const r = parseInt(boardRowsInput.value, 10), c = parseInt(boardColsInput.value, 10);
@@ -10,8 +12,9 @@ function initializeBoard() {
     BOARD_ROWS = r; BOARD_COLS = c; currentMove = 0; currentPos = null; moveHistory = [];
     board = Array(BOARD_ROWS).fill(0).map(() => Array(BOARD_COLS).fill(0));
     chessboardDiv.style.gridTemplateColumns = `repeat(${BOARD_COLS}, 1fr)`;
-    chessboardDiv.style.maxWidth = `${BOARD_COLS * 60}px`;
-    updateProgress(); createBoard();
+    chessboardDiv.style.width = 'auto'; 
+    createBoard(); updateProgress();
+    setTimeout(resizeCanvas, 100);
     messageElement.textContent = "SYSTEM INITIALIZED. SELECT START NODE.";
 }
 function createBoard() {
@@ -25,6 +28,24 @@ function createBoard() {
             chessboardDiv.appendChild(sq);
         }
     }
+}
+function resizeCanvas() {
+    const rect = chessboardDiv.getBoundingClientRect();
+    canvas.width = rect.width; canvas.height = rect.height;
+    drawPath();
+}
+function drawPath() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!pathToggle.checked || moveHistory.length < 2) return;
+    ctx.beginPath(); ctx.strokeStyle = '#00f2ff'; ctx.lineWidth = 1.5;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.shadowBlur = 5; ctx.shadowColor = '#00f2ff';
+    const sw = canvas.width / BOARD_COLS, sh = canvas.height / BOARD_ROWS;
+    moveHistory.forEach((p, i) => {
+        const x = (p.c + 0.5) * sw, y = (p.r + 0.5) * sh;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
 }
 function updateProgress() {
     const total = BOARD_ROWS * BOARD_COLS;
@@ -45,7 +66,7 @@ function moveKnight(r, c) {
     const el = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
     el.classList.add('current-knight');
     const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; el.appendChild(k);
-    updateProgress(); const nm = highlightPossibleMoves(r, c);
+    updateProgress(); drawPath(); const nm = highlightPossibleMoves(r, c);
     if (currentMove === BOARD_ROWS * BOARD_COLS) {
         messageElement.textContent = "✨ MISSION COMPLETE."; flashOverlay.classList.add('flash-success');
     } else if (nm.length === 0) {
@@ -57,8 +78,7 @@ function moveKnight(r, c) {
 function undoMove() {
     if (currentMove <= 1) { initializeBoard(); return; }
     flashOverlay.className = 'screen-flash';
-    const [cr, cc] = currentPos;
-    board[cr][cc] = 0;
+    const [cr, cc] = currentPos; board[cr][cc] = 0;
     const cEl = document.querySelector(`[data-row='${cr}'][data-col='${cc}']`);
     cEl.innerHTML = ''; cEl.classList.remove('current-knight', 'visited');
     moveHistory.pop();
@@ -67,7 +87,7 @@ function undoMove() {
     const pEl = document.querySelector(`[data-row='${last.r}'][data-col='${last.c}']`);
     pEl.innerHTML = ''; pEl.classList.remove('visited'); pEl.classList.add('current-knight');
     const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; pEl.appendChild(k);
-    updateProgress(); highlightPossibleMoves(last.r, last.c);
+    updateProgress(); drawPath(); highlightPossibleMoves(last.r, last.c);
     messageElement.textContent = `RECOVERED TO STEP ${currentMove}.`;
 }
 function highlightPossibleMoves(r, c) {
@@ -89,4 +109,5 @@ function toggleHelp() {
     const m = document.getElementById('help-modal');
     m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
 }
+window.addEventListener('resize', resizeCanvas);
 document.addEventListener('DOMContentLoaded', initializeBoard);
