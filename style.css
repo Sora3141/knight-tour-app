@@ -1,165 +1,57 @@
-/* ベーススタイル */
+:root {
+    --bg-color: #05050a;
+    --card-bg: rgba(20, 20, 35, 0.9);
+    --neon-blue: #00f2ff;
+    --neon-pink: #ff007a;
+    --text-color: #e0e0e0;
+    --grid-light: rgba(255, 255, 255, 0.08); 
+    --grid-dark: rgba(255, 255, 255, 0.03);
+}
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #05050a 100%);
+    color: var(--text-color); margin: 0; overflow-x: hidden;
+    display: flex; justify-content: center; min-height: 100vh;
 }
+/* ヘルプ */
+.help-icon { position: fixed; top: 20px; right: 20px; width: 40px; height: 40px; border: 2px solid var(--neon-blue); border-radius: 50%; color: var(--neon-blue); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; z-index: 110; background: rgba(0,0,0,0.8); transition: 0.3s; }
+.help-icon:hover { box-shadow: 0 0 15px var(--neon-blue); background: var(--neon-blue); color: #000; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(5px); }
+.modal-content { background: var(--card-bg); border: 2px solid var(--neon-blue); padding: 30px; max-width: 400px; width: 90%; border-radius: 10px; box-shadow: 0 0 30px var(--neon-blue); }
+.modal-content h2 { font-family: 'Orbitron', sans-serif; color: var(--neon-blue); margin-top: 0; border-bottom: 1px solid var(--neon-blue); padding-bottom: 10px; }
+.rule-list { list-style: none; padding: 0; line-height: 1.6; text-align: left; }
+.rule-list li { margin-bottom: 15px; font-size: 0.9rem; }
+.rule-list span { color: var(--neon-pink); font-family: 'Orbitron', sans-serif; font-weight: bold; margin-right: 5px; }
 
-.container {
-    max-width: 90%;
-    text-align: center;
-}
+/* 演出 */
+.screen-flash { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 0.8s ease; }
+.flash-success { background: radial-gradient(circle, transparent 20%, var(--neon-blue) 150%); opacity: 0.5; }
+.flash-fail { animation: failGlow 0.6s ease-in-out infinite alternate; opacity: 1; }
+@keyframes failGlow { 0% { background: radial-gradient(circle, transparent 20%, #ff0000 150%); opacity: 0.1; } 100% { background: radial-gradient(circle, transparent 20%, #ff0000 150%); opacity: 0.4; } }
 
-h1 {
-    color: #4a4a4a;
-    margin-bottom: 20px;
-}
-
-/* 制御パネル */
-.controls {
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #fff;
-}
-
-.controls .size-input, .controls button {
-    padding: 8px 15px;
-    margin: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.controls button {
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-    transition: background-color 0.2s;
-}
-
-.controls button:hover {
-    background-color: #4cae4c;
-}
-
-/* チェス盤全体 */
-#chessboard-wrapper {
-    display: flex;
-    justify-content: center;
-}
-
-#chessboard {
-    display: grid;
-    /* grid-template-columnsとrowsはJavaScriptで設定されます */
-    border: 5px solid #333;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    transition: all 0.3s;
-}
-
-/* マス目の基本スタイル */
-.square {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.3s, box-shadow 0.2s;
-    position: relative;
-    box-sizing: border-box;
-}
-
-/* マスの色分け (チェス盤の配色) */
-.light-square {
-    background-color: #f0d9b5; /* 薄い色 */
-}
-.dark-square {
-    background-color: #b58863; /* 濃い色 */
-}
-
-/* 訪問済みのマス - 半透明のオーバーレイでマーキング */
-.visited {
-    position: relative;
-}
-.visited::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.3); 
-    pointer-events: none; 
-    z-index: 2; 
-}
-
-/* ナイトの駒 (Unicode: ♞ U+265E) */
-.knight-piece {
-    /* ナイトの駒を非表示にします */
-    display: none !important; 
-    font-size: 3em;
-    line-height: 1;
-    color: #333; 
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
-    z-index: 10;
-}
-
-/* ナイトがいるマス (現在地) */
-.current-knight {
-    box-shadow: inset 0 0 10px #ff4500; /* 赤い影 */
-}
-.current-knight::after {
-    content: none !important; /* 現在地にはオーバーレイをかけない */
-}
-
-/* 訪問済みの手数表示を中央に配置 */
-.move-number {
-    position: absolute;
-    top: 50%; 
-    left: 50%;
-    transform: translate(-50%, -50%); /* 中央揃え */
-    
-    font-size: 1.8em; 
-    font-weight: bold;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.7); /* 背景を濃く */
-    padding: 5px 10px; 
-    border-radius: 50%; /* 円形にする */
-    min-width: 30px; 
-    text-align: center;
-    line-height: 1;
-
-    z-index: 10;
-}
-
-/* 次に移動可能なマス (明るい緑で強調) */
-.possible-move {
-    box-shadow: 0 0 10px 5px #75f94b !important; 
-    border: 2px solid #32cd32; 
-    outline-offset: -2px; 
-    z-index: 3;
-}
-
-.possible-move:hover {
-    cursor: pointer;
-    background-color: rgba(117, 249, 75, 0.5) !important; 
-}
-
-/* メッセージエリア */
-#message {
-    font-size: 1.2em;
-    font-weight: bold;
-    margin-top: 15px;
-    color: #ff4500;
-}
+.container { width: 100%; max-width: 600px; padding: 20px; text-align: center; position: relative; z-index: 10; }
+h1 { font-family: 'Orbitron', sans-serif; letter-spacing: 5px; font-size: 2rem; text-shadow: 0 0 10px var(--neon-blue); }
+h1 span { color: var(--neon-pink); }
+.progress-container { background: rgba(0, 0, 0, 0.5); height: 10px; border-radius: 5px; margin: 15px auto; overflow: hidden; border: 1px solid var(--neon-blue); }
+.progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); box-shadow: 0 0 15px var(--neon-blue); transition: width 0.4s ease; }
+#progress-text { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: var(--neon-blue); margin-top: 5px; display: block; }
+.controls { background: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px solid rgba(0, 242, 255, 0.2); margin-bottom: 20px; }
+.input-group input { background: #000; border: 1px solid var(--neon-blue); color: var(--neon-blue); font-family: 'Orbitron', sans-serif; padding: 5px; width: 45px; text-align: center; }
+.button-group { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+.btn-main { font-family: 'Orbitron', sans-serif; padding: 12px 30px; cursor: pointer; background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue); border-radius: 4px; transition: all 0.2s; letter-spacing: 2px; }
+.btn-main:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
+.btn-sub { font-family: 'Orbitron', sans-serif; padding: 12px 20px; cursor: pointer; background: transparent; border: 1px solid var(--neon-pink); color: var(--neon-pink); border-radius: 4px; transition: all 0.2s; letter-spacing: 1px; }
+.btn-sub:hover { background: var(--neon-pink); color: #000; box-shadow: 0 0 15px var(--neon-pink); }
+#chessboard { display: grid; margin: 0 auto; gap: 0; border: 3px solid var(--neon-blue); box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); background: #000; width: 100%; }
+.square { width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; box-sizing: border-box; border: 1px solid rgba(0, 242, 255, 0.15); }
+.light-square { background-color: var(--grid-light); }
+.dark-square { background-color: var(--grid-dark); }
+.knight-icon { font-size: clamp(1.5rem, 5vw, 2.5rem); color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue); z-index: 20; position: absolute; pointer-events: none; animation: knightAppear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes knightAppear { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.current-knight { background: rgba(0, 242, 255, 0.2) !important; box-shadow: inset 0 0 20px var(--neon-blue); }
+.visited::after { content: ''; position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); }
+.move-number { font-family: 'Orbitron', sans-serif; font-size: clamp(0.7rem, 2.5vw, 1rem); font-weight: bold; color: var(--neon-pink); z-index: 5; text-shadow: 1px 1px 2px #000; }
+.possible-move { background: rgba(0, 242, 255, 0.2) !important; border: 2px solid var(--neon-blue) !important; z-index: 4; animation: neonPulse 1s infinite alternate; }
+@keyframes neonPulse { from { box-shadow: 0 0 5px var(--neon-blue); } to { box-shadow: 0 0 15px var(--neon-blue); } }
+#message { font-family: 'Orbitron', sans-serif; color: var(--neon-pink); margin-top: 15px; font-size: 0.9rem; font-weight: bold; }

@@ -3,32 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>♟️ ナイトツアー Web App</title>
+    <title>⚡ KNIGHT TOUR: CYBERPUNK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>ナイトツアー</h1>
-        
-        <div class="controls">
-            <label for="board-rows">行数 (R: 3-12):</label>
-            <input type="number" id="board-rows" value="8" min="3" max="12" class="size-input">
-            
-            <label for="board-cols">列数 (C: 3-12):</label>
-            <input type="number" id="board-cols" value="8" min="3" max="12" class="size-input">
-            
-            <button onclick="initializeBoard()">新しい盤面で開始</button>
-            <button onclick="resetBoard()">リセット</button>
+    <div id="flash-overlay" class="screen-flash"></div>
+    <div class="help-icon" onclick="toggleHelp()">?</div>
+    <div id="help-modal" class="modal-overlay" onclick="toggleHelp()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2>KNIGHT TOUR PROTOCOL</h2>
+            <ul class="rule-list">
+                <li><span>MISSION:</span> 盤面上のすべてのノード（マス）を1度ずつスキャンせよ。</li>
+                <li><span>MOVEMENT:</span> ナイトは「L字型」にのみジャンプ可能。</li>
+                <li><span>RESTRICTION:</span> すでにスキャン済みのノードには戻れない。</li>
+                <li><span>RECOVERY:</span> 「UNDO」で1手前の状態へ復旧できる。</li>
+            </ul>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn-main" onclick="toggleHelp()">CLOSE</button>
+            </div>
         </div>
-
-        <div id="chessboard-wrapper">
-            <div id="chessboard"></div>
-        </div>
-        
-        <p id="message">行数と列数を設定し、「新しい盤面で開始」をクリックしてください。</p>
-        <p class="guide">クリックして開始位置を選択し、すべてのマスを巡りましょう。</p>
     </div>
-
+    <div class="container">
+        <h1>KNIGHT<span>TOUR</span></h1>
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+            <span id="progress-text">PROGRESS: 0%</span>
+        </div>
+        <div class="controls">
+            <div class="input-group">
+                <label>SIZE:</label>
+                <input type="number" id="board-rows" value="8" min="3" max="12">
+                <span>×</span>
+                <input type="number" id="board-cols" value="8" min="3" max="12">
+            </div>
+            <div class="button-group">
+                <button onclick="initializeBoard()" class="btn-main">START / RESET</button>
+                <button onclick="undoMove()" class="btn-sub">UNDO</button>
+            </div>
+        </div>
+        <div id="chessboard-wrapper"><div id="chessboard"></div></div>
+        <p id="message">SYSTEM READY. SELECT START NODE.</p>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

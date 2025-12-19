@@ -1,203 +1,92 @@
-let BOARD_ROWS = 8;
-let BOARD_COLS = 8;
-let board = [];
-let currentMove = 0;
-let currentPos = null;
+let BOARD_ROWS = 8, BOARD_COLS = 8, board = [], currentMove = 0, currentPos = null, moveHistory = [];
+const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+const chessboardDiv = document.getElementById('chessboard'), boardRowsInput = document.getElementById('board-rows'), boardColsInput = document.getElementById('board-cols');
+const messageElement = document.getElementById('message'), progressBar = document.getElementById('progress-bar'), progressText = document.getElementById('progress-text'), flashOverlay = document.getElementById('flash-overlay');
 
-// ナイトの移動パターン (8方向)
-const knightMoves = [
-    [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-    [1, -2], [1, 2], [2, -1], [2, 1]
-];
-
-const chessboardDiv = document.getElementById('chessboard');
-const boardRowsInput = document.getElementById('board-rows');
-const boardColsInput = document.getElementById('board-cols');
-const messageElement = document.getElementById('message');
-
-// --- 関数定義 ---
-
-// 盤面サイズを初期化し、新しい盤面を生成する
 function initializeBoard() {
-    const rows = parseInt(boardRowsInput.value, 10);
-    const cols = parseInt(boardColsInput.value, 10);
-    
-    // サイズのバリデーション
-    if (rows < 3 || rows > 12 || isNaN(rows) || cols < 3 || cols > 12 || isNaN(cols)) {
-        alert("行数と列数はそれぞれ3から12の間で設定してください。");
-        boardRowsInput.value = BOARD_ROWS; 
-        boardColsInput.value = BOARD_COLS; 
-        return;
-    }
-    
-    BOARD_ROWS = rows;
-    BOARD_COLS = cols;
-    currentMove = 0;
-    currentPos = null;
-    
-    // board配列を初期化
+    const r = parseInt(boardRowsInput.value, 10), c = parseInt(boardColsInput.value, 10);
+    if (r < 3 || r > 12 || c < 3 || c > 12) { alert("3〜12で設定してください"); return; }
+    flashOverlay.className = 'screen-flash';
+    BOARD_ROWS = r; BOARD_COLS = c; currentMove = 0; currentPos = null; moveHistory = [];
     board = Array(BOARD_ROWS).fill(0).map(() => Array(BOARD_COLS).fill(0));
-    
-    // CSS Gridのテンプレートを動的に設定
-    chessboardDiv.style.gridTemplateColumns = `repeat(${BOARD_COLS}, 60px)`; // 列数
-    chessboardDiv.style.gridTemplateRows = `repeat(${BOARD_ROWS}, 60px)`;   // 行数
-    
-    createBoard(); // 盤面をHTMLに生成
-    messageElement.textContent = "クリックして開始位置を選択してください。";
+    chessboardDiv.style.gridTemplateColumns = `repeat(${BOARD_COLS}, 1fr)`;
+    chessboardDiv.style.maxWidth = `${BOARD_COLS * 60}px`;
+    updateProgress(); createBoard();
+    messageElement.textContent = "SYSTEM INITIALIZED. SELECT START NODE.";
 }
-
-// 盤をHTMLに生成する
 function createBoard() {
     chessboardDiv.innerHTML = '';
     for (let r = 0; r < BOARD_ROWS; r++) {
         for (let c = 0; c < BOARD_COLS; c++) {
-            const square = document.createElement('div');
-            square.classList.add('square');
-            // 色分けロジック (r+cが偶数なら明るい、奇数なら濃い)
-            square.classList.add((r + c) % 2 === 0 ? 'light-square' : 'dark-square');
-            square.dataset.row = r;
-            square.dataset.col = c;
-            square.addEventListener('click', () => handleSquareClick(r, c));
-            chessboardDiv.appendChild(square);
+            const sq = document.createElement('div');
+            sq.className = `square ${(r + c) % 2 === 0 ? 'light-square' : 'dark-square'}`;
+            sq.dataset.row = r; sq.dataset.col = c;
+            sq.onclick = () => handleSquareClick(r, c);
+            chessboardDiv.appendChild(sq);
         }
     }
 }
-
-// マスが盤内にあるか、かつ未訪問かチェック
-function isValidMove(r, c) {
-    return r >= 0 && r < BOARD_ROWS && 
-           c >= 0 && c < BOARD_COLS && 
-           board[r][c] === 0;
+function updateProgress() {
+    const total = BOARD_ROWS * BOARD_COLS;
+    const percent = total > 0 ? Math.floor((currentMove / total) * 100) : 0;
+    progressBar.style.width = `${percent}%`;
+    progressText.textContent = `PROGRESS: ${percent}% (${currentMove}/${total})`;
 }
-
-// 可能な移動先を計算し、ハイライトする
-function highlightPossibleMoves(r, c) {
-    // 既存のハイライトを削除
-    document.querySelectorAll('.possible-move').forEach(el => el.classList.remove('possible-move'));
-
-    let possibleMoves = [];
-    for (const [dr, dc] of knightMoves) {
-        const newR = r + dr;
-        const newC = c + dc;
-
-        if (isValidMove(newR, newC)) {
-            possibleMoves.push([newR, newC]);
-            // HTML要素をハイライト
-            const squareEl = document.querySelector(`[data-row='${newR}'][data-col='${newC}']`);
-            if (squareEl) {
-                squareEl.classList.add('possible-move');
-            }
-        }
-    }
-    return possibleMoves;
-}
-
-// ナイトの移動処理
 function moveKnight(r, c) {
-    // 移動前の現在地マスから 'current-knight' クラスを削除
+    moveHistory.push({r, c});
     if (currentPos) {
-        const prevR = currentPos[0];
-        const prevC = currentPos[1];
-        const prevSquareEl = document.querySelector(`[data-row='${prevR}'][data-col='${prevC}']`);
-        if (prevSquareEl) {
-            // 前のマスは単なる「訪問済み」になる
-            prevSquareEl.classList.remove('current-knight'); 
-            
-            // ナイト駒を削除 (CSSで非表示だが、要素は削除)
-            const prevKnight = prevSquareEl.querySelector('.knight-piece');
-            if (prevKnight) prevKnight.remove();
-        }
+        const [pr, pc] = currentPos;
+        const pEl = document.querySelector(`[data-row='${pr}'][data-col='${pc}']`);
+        const ok = pEl.querySelector('.knight-icon'); if (ok) ok.remove();
+        const sp = document.createElement('span'); sp.className = 'move-number'; sp.textContent = currentMove;
+        pEl.appendChild(sp); pEl.classList.remove('current-knight'); pEl.classList.add('visited');
     }
-
-    currentMove++;
-    board[r][c] = currentMove;
-    currentPos = [r, c];
-
-    // 現在のマスを更新
-    const currentSquareEl = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
-    if (currentSquareEl) {
-        // 訪問済みと現在地の両方を付与
-        currentSquareEl.classList.add('visited'); 
-        currentSquareEl.classList.add('current-knight');
-        
-        // ナイトの駒（♞）の生成ロジックは削除します (手数表示のみに注力するため)。
-
-        // 手数表示を更新
-        let moveNumber = currentSquareEl.querySelector('.move-number');
-        if (!moveNumber) {
-             moveNumber = document.createElement('span');
-             moveNumber.classList.add('move-number');
-             currentSquareEl.appendChild(moveNumber);
-        }
-        moveNumber.textContent = currentMove;
-    }
-
-    // 次の可能な移動先をハイライト
-    const nextMoves = highlightPossibleMoves(r, c);
-
-    // ゲームの終了判定
-    const totalSquares = BOARD_ROWS * BOARD_COLS;
-    if (currentMove === totalSquares) {
-        messageElement.textContent = `✨クリア！${currentMove}手で全てを巡りました！`;
-        document.querySelectorAll('.possible-move').forEach(el => el.classList.remove('possible-move'));
-    } else if (nextMoves.length === 0) {
-        messageElement.textContent = `ゲームオーバー！${currentMove}手で止まってしまいました。リセットしてください。`;
+    currentMove++; board[r][c] = currentMove; currentPos = [r, c];
+    const el = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
+    el.classList.add('current-knight');
+    const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; el.appendChild(k);
+    updateProgress(); const nm = highlightPossibleMoves(r, c);
+    if (currentMove === BOARD_ROWS * BOARD_COLS) {
+        messageElement.textContent = "✨ MISSION COMPLETE."; flashOverlay.classList.add('flash-success');
+    } else if (nm.length === 0) {
+        messageElement.textContent = "⚠️ SYSTEM HALT."; flashOverlay.classList.add('flash-fail');
     } else {
-        messageElement.textContent = `現在 ${currentMove} 手目。次はどこへ移動しますか？`;
+        messageElement.textContent = "TARGET ACQUIRED. SCANNING...";
     }
 }
-
-// マスクリック時のハンドラー
+function undoMove() {
+    if (currentMove <= 1) { initializeBoard(); return; }
+    flashOverlay.className = 'screen-flash';
+    const [cr, cc] = currentPos;
+    board[cr][cc] = 0;
+    const cEl = document.querySelector(`[data-row='${cr}'][data-col='${cc}']`);
+    cEl.innerHTML = ''; cEl.classList.remove('current-knight', 'visited');
+    moveHistory.pop();
+    const last = moveHistory[moveHistory.length - 1];
+    currentMove--; currentPos = [last.r, last.c];
+    const pEl = document.querySelector(`[data-row='${last.r}'][data-col='${last.c}']`);
+    pEl.innerHTML = ''; pEl.classList.remove('visited'); pEl.classList.add('current-knight');
+    const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; pEl.appendChild(k);
+    updateProgress(); highlightPossibleMoves(last.r, last.c);
+    messageElement.textContent = `RECOVERED TO STEP ${currentMove}.`;
+}
+function highlightPossibleMoves(r, c) {
+    document.querySelectorAll('.possible-move').forEach(e => e.classList.remove('possible-move'));
+    let m = [];
+    for (const [dr, dc] of knightMoves) {
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < BOARD_ROWS && nc >= 0 && nc < BOARD_COLS && board[nr][nc] === 0) {
+            m.push([nr, nc]); document.querySelector(`[data-row='${nr}'][data-col='${nc}']`).classList.add('possible-move');
+        }
+    }
+    return m;
+}
 function handleSquareClick(r, c) {
-    if (currentMove === 0) {
-        // 初手: どこでも開始可能
-        moveKnight(r, c);
-        return;
-    }
-
-    if (currentPos === null) {
-        messageElement.textContent = "最初に「新しい盤面で開始」ボタンを押してください。";
-        return;
-    }
-    
-    // 2手目以降の場合: 移動可能先かをチェック
-    const isPossible = document.querySelector(`[data-row='${r}'][data-col='${c}']`).classList.contains('possible-move');
-
-    if (isPossible) {
-        moveKnight(r, c);
-    } else if (board[r][c] === 0) {
-        // 未訪問だが、移動ルールを満たさない場合
-        messageElement.textContent = "そこには移動できません。ナイトは「L字型」に動く必要があります。";
-    }
-    // 訪問済みのマスをクリックしても何もしない
+    const el = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
+    if (currentMove === 0 || el.classList.contains('possible-move')) moveKnight(r, c);
 }
-
-// 盤面をリセットする (サイズは維持)
-function resetBoard() {
-    if (BOARD_ROWS === 0 || BOARD_COLS === 0) {
-        messageElement.textContent = "最初に「新しい盤面で開始」ボタンを押してください。";
-        return;
-    }
-    
-    currentMove = 0;
-    currentPos = null;
-    
-    // board配列をリセット
-    board = Array(BOARD_ROWS).fill(0).map(() => Array(BOARD_COLS).fill(0));
-    
-    // HTML要素をリセット
-    document.querySelectorAll('.square').forEach(el => {
-        el.innerHTML = ''; // 手数表示をクリア
-        el.classList.remove('current-knight', 'possible-move', 'visited');
-    });
-
-    messageElement.textContent = "クリックして開始位置を選択してください。";
+function toggleHelp() {
+    const m = document.getElementById('help-modal');
+    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
 }
-
-
-// --- アプリケーションの開始 ---
-// 初期読み込み時の処理
-document.addEventListener('DOMContentLoaded', () => {
-    // ページロード時はデフォルトのサイズで初期化
-    initializeBoard(); 
-});
+document.addEventListener('DOMContentLoaded', initializeBoard);
