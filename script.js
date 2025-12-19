@@ -109,5 +109,6 @@ function toggleHelp() {
     const m = document.getElementById('help-modal');
     m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
 }
+
 window.addEventListener('resize', resizeCanvas);
 document.addEventListener('DOMContentLoaded', initializeBoard);
