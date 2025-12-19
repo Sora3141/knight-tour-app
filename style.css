@@ -7,6 +7,7 @@
     --grid-light: rgba(255, 255, 255, 0.08); 
     --grid-dark: rgba(255, 255, 255, 0.03);
 }
+
 body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #05050a 100%); color: var(--text-color); margin: 0; overflow-x: hidden; display: flex; justify-content: center; min-height: 100vh; }
 
 /* ヘルプ */

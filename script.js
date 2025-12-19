@@ -4,6 +4,7 @@ const chessboardDiv = document.getElementById('chessboard'), boardRowsInput = do
 const messageElement = document.getElementById('message'), progressBar = document.getElementById('progress-bar'), progressText = document.getElementById('progress-text'), flashOverlay = document.getElementById('flash-overlay');
 const canvas = document.getElementById('path-canvas'), ctx = canvas.getContext('2d'), pathToggle = document.getElementById('path-toggle');
 
+
 function initializeBoard() {
     const r = parseInt(boardRowsInput.value, 10), c = parseInt(boardColsInput.value, 10);
     if (r < 3 || r > 12 || c < 3 || c > 12) { alert("3〜12で設定してください"); return; }
