@@ -4,7 +4,6 @@ const chessboardDiv = document.getElementById('chessboard'), boardRowsInput = do
 const messageElement = document.getElementById('message'), progressBar = document.getElementById('progress-bar'), progressText = document.getElementById('progress-text'), flashOverlay = document.getElementById('flash-overlay');
 const canvas = document.getElementById('path-canvas'), ctx = canvas.getContext('2d'), pathToggle = document.getElementById('path-toggle');
 
-
 function initializeBoard() {
     const r = parseInt(boardRowsInput.value, 10), c = parseInt(boardColsInput.value, 10);
     if (r < 3 || r > 12 || c < 3 || c > 12) { alert("3〜12で設定してください"); return; }
@@ -13,9 +12,11 @@ function initializeBoard() {
     board = Array(BOARD_ROWS).fill(0).map(() => Array(BOARD_COLS).fill(0));
     chessboardDiv.style.gridTemplateColumns = `repeat(${BOARD_COLS}, 1fr)`;
     createBoard(); updateProgress();
-    // スマホのレイアウト確定を待ってからCanvasをリサイズ
-    setTimeout(resizeCanvas, 200);
-    messageElement.textContent = "SYSTEM INITIALIZED. SELECT START NODE.";
+    
+    // 描画タイミングの安定化
+    setTimeout(resizeCanvas, 100);
+    setTimeout(resizeCanvas, 500); 
+    messageElement.textContent = "SYSTEM READY.";
 }
 
 function createBoard() {
@@ -33,20 +34,21 @@ function createBoard() {
 
 function resizeCanvas() {
     const rect = chessboardDiv.getBoundingClientRect();
+    if (rect.width === 0) return;
+
     const dpr = window.devicePixelRatio || 1;
-    // 解像度に合わせてキャンバスのピクセルサイズを設定
+    // 物理ピクセルサイズに合わせる
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    // 表示サイズはCSSのままで
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); 
     drawPath();
 }
 
 function drawPath() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const rect = chessboardDiv.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
     if (!pathToggle.checked || moveHistory.length < 2) return;
     
-    const rect = chessboardDiv.getBoundingClientRect();
     const sw = rect.width / BOARD_COLS;
     const sh = rect.height / BOARD_ROWS;
 
@@ -78,21 +80,30 @@ function moveKnight(r, c) {
     if (currentPos) {
         const [pr, pc] = currentPos;
         const pEl = document.querySelector(`[data-row='${pr}'][data-col='${pc}']`);
-        const ok = pEl.querySelector('.knight-icon'); if (ok) ok.remove();
-        const sp = document.createElement('span'); sp.className = 'move-number'; sp.textContent = currentMove;
-        pEl.appendChild(sp); pEl.classList.remove('current-knight'); pEl.classList.add('visited');
+        if (pEl) {
+            const ok = pEl.querySelector('.knight-icon'); if (ok) ok.remove();
+            const sp = document.createElement('span'); sp.className = 'move-number'; sp.textContent = currentMove;
+            pEl.appendChild(sp); pEl.classList.remove('current-knight'); pEl.classList.add('visited');
+        }
     }
     currentMove++; board[r][c] = currentMove; currentPos = [r, c];
     const el = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
-    el.classList.add('current-knight');
-    const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; el.appendChild(k);
-    updateProgress(); drawPath(); const nm = highlightPossibleMoves(r, c);
-    if (currentMove === BOARD_ROWS * BOARD_COLS) {
+    if (el) {
+        el.classList.add('current-knight');
+        const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; el.appendChild(k);
+    }
+    updateProgress(); drawPath(); highlightPossibleMoves(r, c);
+    
+    const total = BOARD_ROWS * BOARD_COLS;
+    if (currentMove === total) {
         messageElement.textContent = "✨ MISSION COMPLETE."; flashOverlay.classList.add('flash-success');
-    } else if (nm.length === 0) {
-        messageElement.textContent = "⚠️ SYSTEM HALT."; flashOverlay.classList.add('flash-fail');
     } else {
-        messageElement.textContent = "TARGET ACQUIRED. SCANNING...";
+        const nm = document.querySelectorAll('.possible-move');
+        if (nm.length === 0) {
+            messageElement.textContent = "⚠️ SYSTEM HALT."; flashOverlay.classList.add('flash-fail');
+        } else {
+            messageElement.textContent = "TARGET ACQUIRED.";
+        }
     }
 }
 
@@ -101,15 +112,16 @@ function undoMove() {
     flashOverlay.className = 'screen-flash';
     const [cr, cc] = currentPos; board[cr][cc] = 0;
     const cEl = document.querySelector(`[data-row='${cr}'][data-col='${cc}']`);
-    cEl.innerHTML = ''; cEl.classList.remove('current-knight', 'visited');
+    if (cEl) { cEl.innerHTML = ''; cEl.classList.remove('current-knight', 'visited'); }
     moveHistory.pop();
     const last = moveHistory[moveHistory.length - 1];
     currentMove--; currentPos = [last.r, last.c];
     const pEl = document.querySelector(`[data-row='${last.r}'][data-col='${last.c}']`);
-    pEl.innerHTML = ''; pEl.classList.remove('visited'); pEl.classList.add('current-knight');
-    const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; pEl.appendChild(k);
+    if (pEl) {
+        pEl.innerHTML = ''; pEl.classList.remove('visited'); pEl.classList.add('current-knight');
+        const k = document.createElement('div'); k.className = 'knight-icon'; k.textContent = '♞'; pEl.appendChild(k);
+    }
     updateProgress(); drawPath(); highlightPossibleMoves(last.r, last.c);
-    messageElement.textContent = `RECOVERED TO STEP ${currentMove}.`;
 }
 
 function highlightPossibleMoves(r, c) {
@@ -128,7 +140,7 @@ function highlightPossibleMoves(r, c) {
 
 function handleSquareClick(r, c) {
     const el = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
-    if (currentMove === 0 || el.classList.contains('possible-move')) moveKnight(r, c);
+    if (currentMove === 0 || (el && el.classList.contains('possible-move'))) moveKnight(r, c);
 }
 
 function toggleHelp() {
@@ -136,7 +148,6 @@ function toggleHelp() {
     m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
 }
 
-// 画面回転やリサイズ時にCanvasを再調整
 window.addEventListener('resize', resizeCanvas);
-window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 400));
 document.addEventListener('DOMContentLoaded', initializeBoard);

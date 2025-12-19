@@ -7,57 +7,63 @@
     --grid-light: rgba(255, 255, 255, 0.08); 
     --grid-dark: rgba(255, 255, 255, 0.03);
 }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #05050a 100%); color: var(--text-color); margin: 0; display: flex; justify-content: center; min-height: 100vh; touch-action: manipulation; }
 
-body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #05050a 100%); color: var(--text-color); margin: 0; overflow-x: hidden; display: flex; justify-content: center; min-height: 100vh; }
-
-/* ヘルプ */
-.help-icon { position: fixed; top: 15px; right: 15px; width: 35px; height: 35px; border: 2px solid var(--neon-blue); border-radius: 50%; color: var(--neon-blue); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; z-index: 110; background: rgba(0,0,0,0.8); }
-
+.help-icon { position: fixed; top: 15px; right: 15px; width: 35px; height: 35px; border: 2px solid var(--neon-blue); border-radius: 50%; color: var(--neon-blue); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; cursor: pointer; z-index: 110; background: rgba(0,0,0,0.8); }
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(5px); }
-.modal-content { background: var(--card-bg); border: 2px solid var(--neon-blue); padding: 25px; max-width: 400px; width: 85%; border-radius: 10px; box-shadow: 0 0 30px var(--neon-blue); text-align: center; }
+.modal-content { background: var(--card-bg); border: 2px solid var(--neon-blue); padding: 25px; width: 85%; max-width: 400px; border-radius: 10px; box-shadow: 0 0 30px var(--neon-blue); }
 
 .screen-flash { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 0.8s ease; }
 .flash-success { background: radial-gradient(circle, transparent 20%, var(--neon-blue) 150%); opacity: 0.5; }
 .flash-fail { animation: failGlow 0.6s ease-in-out infinite alternate; opacity: 1; }
 @keyframes failGlow { 0% { background: radial-gradient(circle, transparent 20%, #ff0000 150%); opacity: 0.1; } 100% { background: radial-gradient(circle, transparent 20%, #ff0000 150%); opacity: 0.4; } }
 
-.container { width: 100%; max-width: 600px; padding: 15px; text-align: center; position: relative; z-index: 10; }
-h1 { font-family: 'Orbitron', sans-serif; letter-spacing: 3px; font-size: 1.8rem; text-shadow: 0 0 10px var(--neon-blue); margin: 10px 0; }
+.container { width: 100%; max-width: 500px; padding: 10px; text-align: center; z-index: 10; }
+h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-blue); margin: 10px 0; }
 h1 span { color: var(--neon-pink); }
 
-.progress-container { background: rgba(0, 0, 0, 0.5); height: 8px; border-radius: 4px; margin: 10px auto; overflow: hidden; border: 1px solid var(--neon-blue); }
+.progress-container { background: rgba(0, 0, 0, 0.5); height: 6px; border-radius: 3px; margin: 10px auto; overflow: hidden; border: 1px solid var(--neon-blue); }
 .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); transition: width 0.4s ease; }
 #progress-text { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--neon-blue); margin-top: 4px; display: block; }
 
-.controls { background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid rgba(0, 242, 255, 0.2); margin-bottom: 15px; }
-.input-group input { background: #000; border: 1px solid var(--neon-blue); color: var(--neon-blue); font-family: 'Orbitron', sans-serif; padding: 4px; width: 40px; text-align: center; font-size: 1rem; }
+.controls { background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid rgba(0, 242, 255, 0.2); margin-bottom: 10px; }
+.input-row { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+.input-group input { background: #000; border: 1px solid var(--neon-blue); color: var(--neon-blue); font-family: 'Orbitron', sans-serif; padding: 4px; width: 45px; text-align: center; font-size: 1rem; }
 
-/* スイッチ修正: appearanceを無効化 */
-.toggle-group { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0; }
-.switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-.switch input { opacity: 0; width: 0; height: 0; appearance: none; -webkit-appearance: none; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #111; transition: .3s; border-radius: 22px; border: 1.5px solid var(--neon-blue); }
-.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 2.5px; background-color: var(--neon-blue); transition: .3s; border-radius: 50%; }
-input:checked + .slider { background-color: rgba(0, 242, 255, 0.2); }
+/* スイッチ修正：ChromeのデフォルトUIを完全封鎖 */
+.toggle-group { display: flex; align-items: center; gap: 8px; }
+.switch { position: relative; width: 44px; height: 22px; }
+.switch input { 
+    opacity: 0; width: 0; height: 0; position: absolute;
+    -webkit-appearance: none !important; appearance: none !important;
+    background-image: none !important; 
+}
+.slider { 
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
+    background-color: #111 !important; background-image: none !important;
+    transition: .3s; border-radius: 22px; border: 1.5px solid var(--neon-blue); 
+}
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 2.5px; background-color: var(--neon-blue); transition: .3s; border-radius: 50%; box-shadow: 0 0 5px var(--neon-blue); }
+input:checked + .slider { background-color: rgba(0, 242, 255, 0.2) !important; }
 input:checked + .slider:before { transform: translateX(22px); }
-.toggle-label { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: var(--neon-blue); }
+.toggle-label { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--neon-blue); }
 
 .button-group { display: flex; justify-content: center; gap: 10px; }
-.btn-main { font-family: 'Orbitron', sans-serif; padding: 10px 20px; cursor: pointer; background: transparent; border: 1.5px solid var(--neon-blue); color: var(--neon-blue); border-radius: 4px; font-size: 0.8rem; }
-.btn-sub { font-family: 'Orbitron', sans-serif; padding: 10px 15px; cursor: pointer; background: transparent; border: 1.5px solid var(--neon-pink); color: var(--neon-pink); border-radius: 4px; font-size: 0.8rem; }
+.btn-main { font-family: 'Orbitron', sans-serif; padding: 10px 15px; cursor: pointer; background: transparent; border: 1.5px solid var(--neon-blue); color: var(--neon-blue); border-radius: 4px; font-size: 0.75rem; flex: 2; }
+.btn-sub { font-family: 'Orbitron', sans-serif; padding: 10px 15px; cursor: pointer; background: transparent; border: 1.5px solid var(--neon-pink); color: var(--neon-pink); border-radius: 4px; font-size: 0.75rem; flex: 1; }
 
-/* 盤面とCanvas */
-#chessboard-wrapper { position: relative; margin: 0 auto; width: fit-content; line-height: 0; }
+#chessboard-wrapper { position: relative; margin: 0 auto; width: 100%; max-width: fit-content; line-height: 0; }
 #path-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; width: 100%; height: 100%; }
-#chessboard { display: grid; gap: 0; border: 2.5px solid var(--neon-blue); box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); background: #000; }
-.square { width: min(50px, 11vw); height: min(50px, 11vw); display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; box-sizing: border-box; border: 0.5px solid rgba(0, 242, 255, 0.15); }
+#chessboard { display: grid; border: 2.5px solid var(--neon-blue); background: #000; }
+.square { width: min(48px, 11.5vw); aspect-ratio: 1/1; height: auto; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; box-sizing: border-box; border: 0.5px solid rgba(0, 242, 255, 0.15); }
 .light-square { background-color: var(--grid-light); }
 .dark-square { background-color: var(--grid-dark); }
 
-.knight-icon { font-size: clamp(1.2rem, 5vw, 2rem); color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); z-index: 20; position: absolute; pointer-events: none; }
-.move-number { font-family: 'Orbitron', sans-serif; font-size: clamp(0.6rem, 2.5vw, 0.85rem); font-weight: bold; color: var(--neon-pink); z-index: 10; text-shadow: 1px 1px 2px #000; }
+.knight-icon { font-size: clamp(1.2rem, 5vw, 1.8rem); color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); z-index: 20; position: absolute; pointer-events: none; }
+.move-number { font-family: 'Orbitron', sans-serif; font-size: clamp(0.6rem, 2.5vw, 0.8rem); font-weight: bold; color: var(--neon-pink); z-index: 10; text-shadow: 1px 1px 2px #000; }
 .current-knight { background: rgba(0, 242, 255, 0.15) !important; box-shadow: inset 0 0 15px var(--neon-blue); }
 .visited::after { content: ''; position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); }
 .possible-move { background: rgba(0, 242, 255, 0.15) !important; border: 1.5px solid var(--neon-blue) !important; z-index: 4; animation: neonPulse 1s infinite alternate; }
 @keyframes neonPulse { from { box-shadow: 0 0 2px var(--neon-blue); } to { box-shadow: 0 0 10px var(--neon-blue); } }
-#message { font-family: 'Orbitron', sans-serif; color: var(--neon-pink); margin-top: 12px; font-size: 0.8rem; font-weight: bold; min-height: 1.2em; }
+#message { font-family: 'Orbitron', sans-serif; color: var(--neon-pink); margin-top: 10px; font-size: 0.75rem; font-weight: bold; min-height: 1.2em; }
