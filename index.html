@@ -10,26 +10,30 @@
 <body>
     <div id="flash-overlay" class="screen-flash"></div>
     <div class="help-icon" onclick="toggleHelp()">?</div>
+    
     <div id="help-modal" class="modal-overlay" onclick="toggleHelp()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h2>KNIGHT TOUR PROTOCOL</h2>
             <ul class="rule-list">
                 <li><span>MISSION:</span> 全ノードを1度ずつスキャンせよ。</li>
+                <li><span>CLOSED TOUR:</span> 最後にスタート地点へ戻れば完全勝利。</li>
                 <li><span>MOVEMENT:</span> L字型にのみジャンプ可能。</li>
                 <li><span>PATH:</span> 移動軌跡の表示切替。</li>
-                <li><span>RECOVERY:</span> UNDOで1手前へ復旧。</li>
             </ul>
             <div style="text-align:center; margin-top:20px;">
                 <button class="btn-main" onclick="toggleHelp()">CLOSE</button>
             </div>
         </div>
     </div>
+
     <div class="container">
         <h1>KNIGHT<span>TOUR</span></h1>
+        
         <div class="progress-container">
             <div id="progress-bar" class="progress-bar"></div>
             <span id="progress-text">PROGRESS: 0%</span>
         </div>
+
         <div class="controls">
             <div class="input-row">
                 <div class="input-group">
@@ -51,12 +55,16 @@
                 <button onclick="undoMove()" class="btn-sub">UNDO</button>
             </div>
         </div>
+
         <div id="chessboard-wrapper">
             <canvas id="path-canvas"></canvas>
             <div id="chessboard"></div>
+            <div id="active-knight" class="knight-icon" style="display:none;">♞</div>
         </div>
+
         <p id="message">SYSTEM READY.</p>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
